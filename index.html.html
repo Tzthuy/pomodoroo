@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pomodoro - Nồi</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- Font Coiny cho đồng hồ -->
+  <link href="https://fonts.googleapis.com/css2?family=Coiny&display=swap" rel="stylesheet">
+  <!-- Font Dongle cho toàn bộ chữ còn lại -->
+  <link href="https://fonts.googleapis.com/css2?family=Dongle:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      height: 100vh;
+      background: url("background.png") no-repeat center center/cover;
+      font-family: 'Dongle', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+    }
+    .container { position: relative; width: 100%; height: 100%; }
+
+    .timer {
+      position: absolute;
+      top: 42%;
+      left: 55%;
+      transform: translate(-50%, -50%);
+      font-size: 72px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+      font-family: 'Coiny', cursive;
+    }
+    .control-panel {
+      position: absolute;
+      top: 64%;
+      left: 55%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 16px;
+    }
+    button,
+    .control-panel button,
+    .time-set button {
+      font-family: 'Dongle', sans-serif !important;
+      appearance: none;
+      border: none;
+      outline: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .control-panel button {
+      background: #855425;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 20px;
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.35);
+      transition: background 0.18s ease, transform 0.08s ease;
+    }
+    .control-panel button:active { transform: translateY(1px); }
+    .control-panel button:hover { background: #a17c53; }
+
+    .time-set {
+      position: absolute;
+      top: 25%;
+      left: 28%;
+      background: #5A310C;
+      padding: 5px 7px;
+      border-radius: 14px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.45);
+      font-size: 25px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 180px;
+    }
+    .time-set label {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 24px;
+      color: #fff;
+      align-items: center;
+    }
+    .time-set input[type="number"] {
+      width: 68px;
+      padding: 6px 8px;
+      text-align: center;
+      color: #000;
+      font-family: 'Dongle', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      border-radius: 6px;
+      border: none;
+    }
+    .time-set button {
+      background: #855425;
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 18px;
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.35);
+      transition: background 0.18s ease, transform 0.08s ease;
+      width: 100%;
+      text-align: center;
+    }
+    .time-set button:hover { background: #a17c53; }
+    .time-set button:active { transform: translateY(1px); }
+
+    .history-box {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #5A310C;
+      padding: 8px 14px;
+      border-radius: 18px;
+      font-size: 22px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+      color: #fff;
+      font-family: 'Dongle', sans-serif;
+      font-weight: 700;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.55);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      font-family: 'Dongle', sans-serif;
+      color: #fff;
+    }
+    .modal-content {
+      background: #7b4a12;
+      color: #fff;
+      padding: 20px 36px;
+      border-radius: 12px;
+      font-size: 28px;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .timer { font-size: 56px; left: 50%; top: 38%; }
+      .time-set { left: 6%; top: 20%; }
+      .control-panel { top: 56%; left: 50%; gap: 10px; }
+      .control-panel button, .time-set button { font-size: 20px; padding: 8px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="timer" id="timer">25:00</div>
+    <div class="control-panel">
+      <button onclick="startTimer()">Bắt đầu</button>
+      <button onclick="pauseTimer()">Tạm dừng</button>
+      <button onclick="resetTimer()">Đặt lại</button>
+    </div>
+    <div class="time-set">
+      <label>Tập trung: <input type="number" id="workMinutes" value="25" min="1"></label>
+      <label>Nghỉ ngắn: <input type="number" id="shortBreakMinutes" value="5" min="1"></label>
+      <label>Nghỉ dài: <input type="number" id="longBreakMinutes" value="15" min="1"></label>
+      <button onclick="applyCustomTime()">Áp dụng</button>
+    </div>
+    <div class="history-box" onclick="showHistory()">Lịch sử học bài</div>
+  </div>
+
+  <div class="modal" id="phaseModal">
+    <div class="modal-content" id="modalText"></div>
+  </div>
+
+  <audio id="focusMusic" src="focus.mp3" loop></audio>
+  <audio id="breakMusic" src="break.mp3" loop></audio>
+
+ <script>
+  let timerDisplay = document.getElementById("timer");
+  let timerInterval = null;
+  let currentTime = 25 * 60;
+  let workTime = 25 * 60;
+  let shortBreak = 5 * 60;
+  let longBreak = 15 * 60;
+  let cycle = 0;
+
+  let focusMusic = document.getElementById("focusMusic");
+  let breakMusic = document.getElementById("breakMusic");
+
+  let currentPhase = "focus";
+
+  // mảng lưu lịch sử
+  let history = JSON.parse(localStorage.getItem("pomodoroHistory")) || [];
+
+  function updateDisplay() {
+    let m = Math.floor(currentTime / 60).toString().padStart(2, "0");
+    let s = (currentTime % 60).toString().padStart(2, "0");
+    timerDisplay.textContent = `${m}:${s}`;
+  }
+
+  function startTimer() {
+    if (timerInterval) return;
+    playMusic();
+    timerInterval = setInterval(() => {
+      if (currentTime > 0) {
+        currentTime--;
+        updateDisplay();
+      } else {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        saveHistory(); // lưu khi xong phase
+        nextPhase();
+      }
+    }, 1000);
+  }
+
+  function pauseTimer() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    stopAllMusic();
+  }
+
+  function resetTimer() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    cycle = 0;
+    currentPhase = "focus";
+    currentTime = workTime;
+    updateDisplay();
+    stopAllMusic();
+  }
+
+  function nextPhase() {
+    cycle++;
+    stopAllMusic();
+
+    if (cycle % 8 === 0) {
+      currentTime = longBreak;
+      currentPhase = "longBreak";
+      showModal("Bạn đã rất chăm chỉ, hãy nghỉ ngơi để lấy lại năng lượng nhé!", 5000, () => startTimer());
+    } else if (cycle % 2 === 1) {
+      currentTime = shortBreak;
+      currentPhase = "shortBreak";
+      showModal("Hãy thư giãn một chút nhé!", 5000, () => startTimer());
+    } else {
+      currentTime = workTime;
+      currentPhase = "focus";
+      showModal("Đã tới lúc bạn tập trung vào bài học rồi!", 5000, () => startTimer());
+    }
+
+    updateDisplay();
+  }
+
+  function stopAllMusic() {
+    focusMusic.pause(); focusMusic.currentTime = 0;
+    breakMusic.pause(); breakMusic.currentTime = 0;
+  }
+
+  function playMusic() {
+    stopAllMusic();
+    if (currentPhase === "focus") {
+      focusMusic.play();
+    } else {
+      breakMusic.play();
+    }
+  }
+
+  function applyCustomTime() {
+    let wm = parseInt(document.getElementById("workMinutes").value) || 25;
+    let sb = parseInt(document.getElementById("shortBreakMinutes").value) || 5;
+    let lb = parseInt(document.getElementById("longBreakMinutes").value) || 15;
+    workTime = wm * 60;
+    shortBreak = sb * 60;
+    longBreak = lb * 60;
+    resetTimer();
+  }
+
+  function showModal(text, duration, callback) {
+    let modal = document.getElementById("phaseModal");
+    let modalText = document.getElementById("modalText");
+    modalText.textContent = text;
+    modal.style.display = "flex";
+    setTimeout(() => {
+      modal.style.display = "none";
+      if (typeof callback === "function") callback();
+    }, duration);
+  }
+
+  // lưu lịch sử
+  function saveHistory() {
+    let now = new Date();
+    let phaseName =
+      currentPhase === "focus" ? "Tập trung" :
+      currentPhase === "shortBreak" ? "Nghỉ ngắn" :
+      "Nghỉ dài";
+    let entry = {
+      time: now.toLocaleString("vi-VN"),
+      phase: phaseName,
+    };
+    history.push(entry);
+    localStorage.setItem("pomodoroHistory", JSON.stringify(history));
+  }
+
+  // hiện lịch sử
+  function showHistory() {
+    if (history.length === 0) {
+      alert("Chưa có lịch sử lưu lại!");
+      return;
+    }
+    let text = "📖 Lịch sử học bài:\n\n";
+    history.forEach((h, i) => {
+      text += `${i+1}. ${h.phase} - ${h.time}\n`;
+    });
+    alert(text);
+  }
+
+  updateDisplay();
+</script>
+</body>
+</html>
